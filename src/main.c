@@ -1,28 +1,48 @@
 #include <stdio.h>
+#include <string.h>
 #include <stdlib.h>
 
 #include "msocket.h"
+#include "rtspstruct.h"
+#include "parsertsp.h"
 
-#define  SERVER_IP      "127.0.0.1"
-#define  SERVER_PORT    554
 #define  RTSP_BUFFSIZE  1024
 
-void do_rtspcomm(int comm_fd)
+int do_rtspcomm(int comm_fd)
 {
     int buflen;
+    int rsplen;
     char *buf = NULL;
     buf = (char *)malloc(RTSP_BUFFSIZE);
     if(NULL == buf)
         perror("malloc error");
 
-    buflen = msocket_recv(comm_fd, buf, RTSP_BUFFSIZE);
-    if(buflen < 0)
-        printf("msocket_recv error!!!\n");
+    char *rspbuf = NULL;
+    rspbuf = (char *)malloc(RTSP_BUFFSIZE);
+    if(NULL == rspbuf)
+        perror("malloc error");
 
+    while(1)
+    {
+        memset(buf, 0, sizeof(RTSP_BUFFSIZE));
+        memset(rspbuf, 0, sizeof(RTSP_BUFFSIZE));
+
+        buflen = msocket_recv(comm_fd, buf, RTSP_BUFFSIZE);
+        if(buflen < 0)
+            printf("msocket_recv error!!!\n");
+        else if(buflen == 0)
+            return -1;
+
+        parse_rtsp_msg(buf, buflen, rspbuf, &rsplen);
+
+        msocket_send(comm_fd, rspbuf, rsplen);
+
+    }
 }
 
 int main(int argc, char *argv[])
 {
+    int ret;
     int fd, cli_fd;
     fd = msocket_create();
     if(fd == -1)
@@ -40,7 +60,12 @@ int main(int argc, char *argv[])
         else if(cli_fd == 0)
             continue;
 
-        do_rtspcomm(cli_fd);
+        ret = do_rtspcomm(cli_fd);
+        if(ret < 0)
+        {
+            printf("cli_fd socket connection close\n");
+            msocket_close(cli_fd);
+        }
     }
 
     return 0;

@@ -28,6 +28,9 @@ void msocket_close(int sock_fd)
 
 int msocket_bind(int sock_fd, short port, const char *addr)
 {
+    int opt =1;
+    setsockopt(sock_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+
     struct sockaddr_in sock_st;
 
     memset(&sock_st, 0, sizeof(sock_st));
@@ -66,11 +69,10 @@ int msocket_send(int sock_fd, char *buf, int bufsize)
 
     int ret;
     int cnt = 0;
-    char *pbuf = buf;
 
     while (cnt < bufsize)
     {
-        ret = send(sock_fd, pbuf, bufsize - cnt, 0);
+        ret = send(sock_fd, buf, bufsize - cnt, 0);
         if(ret < 0)
         {
             if(errno == EINTR)
@@ -80,7 +82,7 @@ int msocket_send(int sock_fd, char *buf, int bufsize)
         }
 
         cnt  += ret;
-        pbuf += ret;
+        buf += ret;
     }
     
     return cnt;
@@ -88,17 +90,15 @@ int msocket_send(int sock_fd, char *buf, int bufsize)
 
 int msocket_recv(int sock_fd, char *buf, int bufsize)
 {
-     if(buf == NULL || bufsize < 1)
+    if(buf == NULL || bufsize < 1)
         return 0;
 
-    int ret;
     int cnt = 0;
-    char *pbuf = buf;
 
-    while (cnt < bufsize)
+    while (1)
     {
-        ret = recv(sock_fd, pbuf, bufsize - cnt, 0);
-        if(ret < 0)
+        cnt = recv(sock_fd, buf, bufsize, 0);
+        if(cnt < 0)
         {
             if(errno == EINTR)
                 continue;
@@ -106,9 +106,7 @@ int msocket_recv(int sock_fd, char *buf, int bufsize)
                 return -1;
         }
 
-        cnt  += ret;
-        pbuf += ret;
+        return cnt;
     }
 
-    return cnt;
 }
