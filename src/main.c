@@ -3,6 +3,7 @@
 #include <stdlib.h>
 
 #include "msocket.h"
+#include "register.h"
 #include "rtspstruct.h"
 #include "parsertsp.h"
 
@@ -10,63 +11,72 @@
 
 int do_rtspcomm(int comm_fd)
 {
-    int buflen;
-    int rsplen;
-    char *buf = NULL;
-    buf = (char *)malloc(RTSP_BUFFSIZE);
-    if(NULL == buf)
-        perror("malloc error");
+    int  buflen;
+    int  rsplen;
+    char buf[RTSP_BUFFSIZE]    = {0};
+    char rspbuf[RTSP_BUFFSIZE] = {0};
 
-    char *rspbuf = NULL;
-    rspbuf = (char *)malloc(RTSP_BUFFSIZE);
-    if(NULL == rspbuf)
-        perror("malloc error");
+    buflen = msocket_recv(comm_fd, buf, RTSP_BUFFSIZE);
+    if(buflen < 0)
+        printf("msocket_recv error!!!\n");
+    else if(buflen == 0)
+        return -1;
 
-    while(1)
-    {
-        memset(buf, 0, sizeof(RTSP_BUFFSIZE));
-        memset(rspbuf, 0, sizeof(RTSP_BUFFSIZE));
+    parse_rtsp_msg(comm_fd, buf, buflen, rspbuf, &rsplen);
 
-        buflen = msocket_recv(comm_fd, buf, RTSP_BUFFSIZE);
-        if(buflen < 0)
-            printf("msocket_recv error!!!\n");
-        else if(buflen == 0)
-            return -1;
+    msocket_send(comm_fd, rspbuf, rsplen);
 
-        parse_rtsp_msg(buf, buflen, rspbuf, &rsplen);
-
-        msocket_send(comm_fd, rspbuf, rsplen);
-
-    }
+    return 0;
 }
 
 int main(int argc, char *argv[])
 {
-    int ret;
-    int fd, cli_fd;
-    fd = msocket_create();
-    if(fd == -1)
+    int ret, flag = 0;
+    int srv_fd, cli_fd, max;
+
+    init_register_list();
+
+    srv_fd = msocket_create();
+    if(srv_fd == -1)
         printf("msocket_create errno");
 
-    msocket_bind(fd, SERVER_PORT, SERVER_IP);
+    msocket_bind(srv_fd, SERVER_PORT, SERVER_IP);
 
-    msocket_listen(fd, 5);
+    msocket_listen(srv_fd, 5);
 
+    msocket_fdset_init();
+    msocket_fdset_set(srv_fd);
+    max = srv_fd; 
     while (1)
     {
-        cli_fd = msocket_accept(fd);
+        cli_fd = msocket_select(srv_fd, max, &flag);
+        printf("cli_fd = %d\n", cli_fd);
         if(cli_fd < 0)
-            printf("accept error!\n");
+            return -1;
         else if(cli_fd == 0)
             continue;
 
-        ret = do_rtspcomm(cli_fd);
-        if(ret < 0)
+        if(flag == 1) //new usr
         {
-            printf("cli_fd socket connection close\n");
-            msocket_close(cli_fd);
+            msocket_fdset_set(cli_fd);
+            max = cli_fd > max ? cli_fd : max;
+            add_register_usr(cli_fd);
         }
+        else
+        {
+            ret = do_rtspcomm(cli_fd);
+            if(ret < 0)
+            {
+                printf("cli_fd socket connection close\n");
+                msocket_fdset_clr(cli_fd);
+                msocket_close(cli_fd);
+            }
+        }
+
+        cli_fd = 0;
     }
 
+    msocket_close(srv_fd);
+    destory_register_list();
     return 0;
 }

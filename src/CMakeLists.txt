@@ -12,4 +12,4 @@ aux_source_directory(. M_SRCS)
 
 add_executable(${TARGET} ${M_SRCS})
 
-target_link_libraries(${TARGET} mtcp parsertsp public)
+target_link_libraries(${TARGET} mtcp parsertsp register public)

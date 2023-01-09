@@ -9,4 +9,9 @@ int  msocket_accept(int sock_fd);
 int  msocket_send(int sock_fd, char *buf, int bufsize);
 int  msocket_recv(int sock_fd, char *buf, int bufsize);
 
+void msocket_fdset_init();
+void msocket_fdset_set(int fd);
+void msocket_fdset_clr(int fd);
+int  msocket_select(int sock_fd, int max, int *flag);
+
 #endif

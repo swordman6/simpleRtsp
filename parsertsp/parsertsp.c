@@ -55,7 +55,7 @@ void parse_rtsp_body(rtsp_body_st *pbrtsp, char *buf)
     }
 }
 
-int parse_rtsp_msg(char *buf, int buflen, char *rspbuf, int *rsplen)
+int parse_rtsp_msg(int comm_fd, char *buf, int buflen, char *rspbuf, int *rsplen)
 {
     rtsp_header_st hrtsp = {0};
     rtsp_body_st   brtsp = {0};
@@ -83,5 +83,5 @@ int parse_rtsp_msg(char *buf, int buflen, char *rspbuf, int *rsplen)
     else
         printf("not support!!!\n");
 
-    return 0;
+    return -1;
 }

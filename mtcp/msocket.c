@@ -2,11 +2,15 @@
 #include <errno.h>
 #include <unistd.h>
 #include <string.h>
+#include <sys/select.h>
+#include <sys/time.h>
 #include <arpa/inet.h>
 #include <sys/types.h>          /* See NOTES */
 #include <sys/socket.h>
 
 #include "msocket.h"
+
+fd_set stFdr;
 
 int msocket_create()
 {
@@ -60,6 +64,52 @@ int msocket_accept(int sock_fd)
     }
 
     return cli_fd;
+}
+
+void msocket_fdset_init()
+{
+    FD_ZERO(&stFdr);
+}
+
+void msocket_fdset_set(int fd)
+{
+    FD_SET(fd, &stFdr);
+}
+
+void msocket_fdset_clr(int fd)
+{
+    FD_CLR(fd, &stFdr);
+}
+
+int msocket_select(int sock_fd, int max, int *flag)
+{
+    int ret, cli_fd;
+    
+    fd_set stFdrTmp = stFdr;
+    ret = select(max + 1, &stFdrTmp, NULL, NULL, NULL);
+    if(ret < 0)
+        return -1;
+
+    for(int i = 0; i < max + 1; i++)
+    {
+        if(FD_ISSET(i, &stFdrTmp))
+        {
+            if( i == sock_fd)
+            {
+                cli_fd = msocket_accept(sock_fd);
+                *flag = 1;
+                return cli_fd;
+            }
+            else
+            {
+                *flag = 0;
+                return i;
+            }
+        }
+
+    }
+
+    return 0;  
 }
 
 int msocket_send(int sock_fd, char *buf, int bufsize)
