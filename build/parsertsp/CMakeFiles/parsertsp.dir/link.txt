@@ -1,0 +1,2 @@
+/usr/bin/ar qc ../../libs/libparsertsp.a  CMakeFiles/parsertsp.dir/parsertsp.c.o CMakeFiles/parsertsp.dir/replyrtsp.c.o
+/usr/bin/ranlib ../../libs/libparsertsp.a
