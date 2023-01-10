@@ -13,7 +13,7 @@ typedef struct{
   char  range[16];
   char  useragent[64];
   char  accept[64];
-  char  transport[64]; 
+  char  transport[64];
 }rtsp_body_st;
 
 typedef enum rtsp_support_options{

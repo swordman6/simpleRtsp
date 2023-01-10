@@ -1,22 +1,31 @@
 #include <stdio.h>
+#include <time.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "public.h"
+#include "msocket.h"
 #include "register.h"
 #include "replyrtsp.h"
 #include "parsertsp.h"
 
-static void parse_rtsp_transport(rtsp_body_st *pbrtsp)
+int serverip = 6970;
+
+static void parse_rtsp_transport(int comm_fd, rtsp_body_st *pbrtsp)
 {
     char str[32] = {0};
+    net_comm_st cli_net;
 
     pickstr(str, pbrtsp->transport, '=', '\0', strlen(pbrtsp->transport));
 
-    //sscanf(str, "%hd-%hd", &pbrtsp->rtpport, &pbrtsp->rtcpport);
+    sscanf(str, "%hd-%hd", &cli_net.rtpport, &cli_net.rtcpport);
+
+    cli_net.ip = msocket_getip(comm_fd, GET_PEER_IP); 
+
+    modify_register_netinfo(comm_fd, RTSP_NETINFO_CLI, &cli_net); 
 }
 
-void parse_rtsp_body(rtsp_body_st *pbrtsp, char *buf)
+void parse_rtsp_body(int comm_fd, rtsp_body_st *pbrtsp, char *buf)
 {
     char *pbuf = buf;
     int ret;
@@ -46,7 +55,7 @@ void parse_rtsp_body(rtsp_body_st *pbrtsp, char *buf)
         else if(!strncmp(type, "Transport", strlen("Transport")))
         {
             strncpy(pbrtsp->transport, content, sizeof(pbrtsp->transport));
-            parse_rtsp_transport(pbrtsp);
+            parse_rtsp_transport(comm_fd, pbrtsp);
         }
         else if(!strncmp(type, "Range", strlen("Range")))
             strncpy(pbrtsp->range, content, sizeof(pbrtsp->range));
@@ -57,23 +66,66 @@ void parse_rtsp_body(rtsp_body_st *pbrtsp, char *buf)
 
 int parse_rtsp_msg(int comm_fd, char *buf, int buflen, char *rspbuf, int *rsplen)
 {
+    int status, session;
     rtsp_header_st hrtsp = {0};
     rtsp_body_st   brtsp = {0};
 
     sscanf(buf, "%s %s %s\r\n", hrtsp.rtsp_order, hrtsp.rtsp_domain, hrtsp.rtsp_vesion);
 
-    parse_rtsp_body(&brtsp, buf);
+    parse_rtsp_body(comm_fd, &brtsp, buf);
 
     if(!strncmp(hrtsp.rtsp_order, "OPTIONS", strlen("OPTIONS")))
-        response_options(&hrtsp, &brtsp, rspbuf, rsplen);
+    {
+        response_options(&brtsp, rspbuf, rsplen);
+        modify_register_status(comm_fd, RSTP_COMM_REQUEST);
+    }
     else if (!strncmp(hrtsp.rtsp_order, "DESCRIBE", strlen("DESCRIBE")))
-        response_describe(&hrtsp, &brtsp, rspbuf, rsplen);
+    {
+        response_describe(&brtsp, rspbuf, rsplen);       
+    }
     else if (!strncmp(hrtsp.rtsp_order, "SETUP", strlen("SETUP")))
-        response_setup(&hrtsp, &brtsp, rspbuf, rsplen);
+    {
+        status = get_register_status(comm_fd);
+        if(status < RSTP_COMM_SSESION)
+        {
+            session = time(NULL);
+            modify_register_session(comm_fd, session, 65);
+
+            net_comm_st srv_net;
+            srv_net.ip       = msocket_getip(comm_fd, GET_SOCK_IP);
+            srv_net.rtpport  = serverip++;
+            srv_net.rtcpport = serverip++;
+            modify_register_netinfo(comm_fd, RTSP_NETINFO_SRV, &srv_net);
+        }
+        
+        response_setup(comm_fd, &brtsp, rspbuf, rsplen);
+        modify_register_status(comm_fd, RSTP_COMM_SSESION);
+    }
     else if (!strncmp(hrtsp.rtsp_order, "PLAY", strlen("PLAY")))
-        ;
+    {
+        status = get_register_status(comm_fd);
+        if(status != RSTP_COMM_SSESION && status != RSTP_COMM_PAUSE)
+            return -1;
+
+        get_register_session(comm_fd, &session, NULL);
+        if(session != transfrom_16_int(brtsp.session))
+            return -1;
+
+        response_play(comm_fd, &brtsp, rspbuf, rsplen);
+        modify_register_status(comm_fd, RSTP_COMM_PLAY);
+    }
     else if (!strncmp(hrtsp.rtsp_order, "TEARDOWN", strlen("TEARDOWN")))
-        ;
+    {
+        status = get_register_status(comm_fd);
+
+        get_register_session(comm_fd, &session, NULL);
+        if(session != transfrom_16_int(brtsp.session))
+            return -1;
+
+        response_teardown(&brtsp, rspbuf, rsplen);
+
+        return -2;
+    }
     else if (!strncmp(hrtsp.rtsp_order, "PAUSE", strlen("PAUSE")))
         ;
     else if (!strncmp(hrtsp.rtsp_order, "GET_PARAMETER", strlen("GET_PARAMETER")))
@@ -83,5 +135,5 @@ int parse_rtsp_msg(int comm_fd, char *buf, int buflen, char *rspbuf, int *rsplen
     else
         printf("not support!!!\n");
 
-    return -1;
+    return 0;
 }

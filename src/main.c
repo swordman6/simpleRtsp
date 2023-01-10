@@ -9,36 +9,19 @@
 
 #define  RTSP_BUFFSIZE  1024
 
-int do_rtspcomm(int comm_fd)
-{
-    int  buflen;
-    int  rsplen;
-    char buf[RTSP_BUFFSIZE]    = {0};
-    char rspbuf[RTSP_BUFFSIZE] = {0};
-
-    buflen = msocket_recv(comm_fd, buf, RTSP_BUFFSIZE);
-    if(buflen < 0)
-        printf("msocket_recv error!!!\n");
-    else if(buflen == 0)
-        return -1;
-
-    parse_rtsp_msg(comm_fd, buf, buflen, rspbuf, &rsplen);
-
-    msocket_send(comm_fd, rspbuf, rsplen);
-
-    return 0;
-}
-
 int main(int argc, char *argv[])
 {
     int ret, flag = 0;
     int srv_fd, cli_fd, max;
 
+    int  rcvlen;
+    int  rsplen;
+    char rcvbuf[RTSP_BUFFSIZE] = {0};
+    char rspbuf[RTSP_BUFFSIZE] = {0};
+
     init_register_list();
 
-    srv_fd = msocket_create();
-    if(srv_fd == -1)
-        printf("msocket_create errno");
+    srv_fd = msocket_create(CREATE_SOCK_TCP);
 
     msocket_bind(srv_fd, SERVER_PORT, SERVER_IP);
 
@@ -46,11 +29,10 @@ int main(int argc, char *argv[])
 
     msocket_fdset_init();
     msocket_fdset_set(srv_fd);
-    max = srv_fd; 
+    max = srv_fd;
     while (1)
     {
         cli_fd = msocket_select(srv_fd, max, &flag);
-        printf("cli_fd = %d\n", cli_fd);
         if(cli_fd < 0)
             return -1;
         else if(cli_fd == 0)
@@ -64,11 +46,28 @@ int main(int argc, char *argv[])
         }
         else
         {
-            ret = do_rtspcomm(cli_fd);
-            if(ret < 0)
+            rcvlen = msocket_recv(cli_fd, rcvbuf, RTSP_BUFFSIZE);
+            if(rcvlen == 0)
             {
                 printf("cli_fd socket connection close\n");
                 msocket_fdset_clr(cli_fd);
+                del_register_usr(cli_fd);
+                msocket_close(cli_fd);
+
+                continue;
+            }
+
+            ret = parse_rtsp_msg(cli_fd, rcvbuf, rcvlen, rspbuf, &rsplen);
+            if(ret == -1)
+                continue;
+                      
+            msocket_send(cli_fd, rspbuf, rsplen);
+
+            if(ret == -2)
+            {  
+                printf("cli_fd socket connection close\n");
+                msocket_fdset_clr(cli_fd);
+                del_register_usr(cli_fd);
                 msocket_close(cli_fd);
             }
         }
