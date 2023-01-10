@@ -58,12 +58,10 @@ int main(int argc, char *argv[])
             }
 
             ret = parse_rtsp_msg(cli_fd, rcvbuf, rcvlen, rspbuf, &rsplen);
-            if(ret == -1)
-                continue;
                       
             msocket_send(cli_fd, rspbuf, rsplen);
 
-            if(ret == -2)
+            if(ret == -1)
             {  
                 printf("cli_fd socket connection close\n");
                 msocket_fdset_clr(cli_fd);

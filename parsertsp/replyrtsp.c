@@ -143,3 +143,16 @@ void response_teardown(rtsp_body_st *pbrtsp, char *rspbuf, int *rsplen)
                                timestr \
                                );
 }
+
+void response_errsession(rtsp_body_st *pbrtsp, char *rspbuf, int *rsplen)
+{
+    char timestr[64] = {0};
+
+    rtsp_gen_date(timestr);
+
+    *rsplen = sprintf(rspbuf, "%s %d SESSION ERROR\r\nCSeq: %s\r\nDate: %s\r\n\r\n", \
+                               "RTSP/1.0", 404, \
+                               pbrtsp->cseq,\
+                               timestr \
+                               );
+}

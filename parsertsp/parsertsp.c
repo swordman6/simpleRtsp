@@ -109,10 +109,14 @@ int parse_rtsp_msg(int comm_fd, char *buf, int buflen, char *rspbuf, int *rsplen
 
         get_register_session(comm_fd, &session, NULL);
         if(session != transfrom_16_int(brtsp.session))
-            return -1;
-
-        response_play(comm_fd, &brtsp, rspbuf, rsplen);
-        modify_register_status(comm_fd, RSTP_COMM_PLAY);
+        {
+            response_errsession(&brtsp, rspbuf, rsplen);
+        }
+        else
+        {
+            response_play(comm_fd, &brtsp, rspbuf, rsplen);
+            modify_register_status(comm_fd, RSTP_COMM_PLAY);
+        }
     }
     else if (!strncmp(hrtsp.rtsp_order, "TEARDOWN", strlen("TEARDOWN")))
     {
@@ -120,11 +124,14 @@ int parse_rtsp_msg(int comm_fd, char *buf, int buflen, char *rspbuf, int *rsplen
 
         get_register_session(comm_fd, &session, NULL);
         if(session != transfrom_16_int(brtsp.session))
+        {
+            response_errsession(&brtsp, rspbuf, rsplen);
+        }
+        else
+        {
+            response_teardown(&brtsp, rspbuf, rsplen);
             return -1;
-
-        response_teardown(&brtsp, rspbuf, rsplen);
-
-        return -2;
+        }
     }
     else if (!strncmp(hrtsp.rtsp_order, "PAUSE", strlen("PAUSE")))
         ;
