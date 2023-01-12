@@ -189,3 +189,37 @@ int get_register_netinfo(int comm_fd, int flag, net_comm_st *pst)
 
     return -1;
 }
+
+int modify_register_rtpsock(int comm_fd, int rtp_fd, int rtcp_fd)
+{
+    rtsp_comm_st *pos = NULL;
+    list_for_each_entry(pos, head, list)
+    {
+        if(pos->comm_fd == comm_fd)
+        {
+            pos->rtp_fd = rtp_fd;
+            pos->rtcp_fd = rtcp_fd;
+
+            return 0;
+        }
+    }
+
+    return -1;
+}
+
+int get_register_rtpsock(int comm_fd, int *rtp_fd, int *rtcp_fd)
+{
+    rtsp_comm_st *pos = NULL;
+    list_for_each_entry(pos, head, list)
+    {
+        if(pos->comm_fd == comm_fd)
+        {
+            *rtp_fd  = pos->rtp_fd;
+            *rtcp_fd = pos->rtcp_fd;
+
+            return 0;
+        }
+    }
+
+    return -1;
+}

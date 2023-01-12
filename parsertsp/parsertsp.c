@@ -3,13 +3,12 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "rtp.h"
 #include "public.h"
 #include "msocket.h"
 #include "register.h"
 #include "replyrtsp.h"
 #include "parsertsp.h"
-
-int serverip = 6970;
 
 static void parse_rtsp_transport(int comm_fd, rtsp_body_st *pbrtsp)
 {
@@ -91,11 +90,12 @@ int parse_rtsp_msg(int comm_fd, char *buf, int buflen, char *rspbuf, int *rsplen
             session = time(NULL);
             modify_register_session(comm_fd, session, 65);
 
+            int rtp_fd, rtcp_fd;
             net_comm_st srv_net;
-            srv_net.ip       = msocket_getip(comm_fd, GET_SOCK_IP);
-            srv_net.rtpport  = serverip++;
-            srv_net.rtcpport = serverip++;
-            modify_register_netinfo(comm_fd, RTSP_NETINFO_SRV, &srv_net);
+            srv_net.ip = msocket_getip(comm_fd, GET_SOCK_IP);
+            create_rtpsock(&rtp_fd, &rtcp_fd, &srv_net);
+            modify_register_netinfo(comm_fd, RTSP_NETINFO_SRV, (void *)&srv_net);
+            modify_register_rtpsock(comm_fd, rtp_fd, rtcp_fd);
         }
         
         response_setup(comm_fd, &brtsp, rspbuf, rsplen);
@@ -117,6 +117,8 @@ int parse_rtsp_msg(int comm_fd, char *buf, int buflen, char *rspbuf, int *rsplen
             response_play(comm_fd, &brtsp, rspbuf, rsplen);
             modify_register_status(comm_fd, RSTP_COMM_PLAY);
         }
+
+        strart_rtp_thread(comm_fd);
     }
     else if (!strncmp(hrtsp.rtsp_order, "TEARDOWN", strlen("TEARDOWN")))
     {

@@ -24,6 +24,8 @@ typedef struct{
 
 typedef struct{
     int comm_fd;
+    int rtp_fd;
+    int rtcp_fd;
     int session;
     int timeout;
     int seq;
@@ -44,5 +46,7 @@ int  modify_register_session(int comm_fd, int session, int timeout);
 int  get_register_session(int comm_fd, int *psession, int *ptimeout);
 int  modify_register_netinfo(int comm_fd, int flag, net_comm_st *pst);
 int  get_register_netinfo(int comm_fd, int flag, net_comm_st *pst);
+int  modify_register_rtpsock(int comm_fd, int rtp_fd, int rtcp_fd);
+int  get_register_rtpsock(int comm_fd, int *rtp_fd, int *rtcp_fd);
 
 #endif

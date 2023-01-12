@@ -33,7 +33,7 @@ static void rtsp_gen_sdp(char *sdpstr, int *psdplen)
     time_t t;
     time(&t);
 
-    *psdplen = sprintf(sdpstr, "v=0\r\no=- %d 1 IN IP4 192.17.1.202\r\ns=simple\r\nt=0 0\r\nm=video 5504 RTP/AVP 98\r\na=rtpmap:98 H264/90000\r\na=control:track1\r\n", (int)t);
+    *psdplen = sprintf(sdpstr, "v=0\r\no=- %d 1 IN IP4 192.168.1.88\r\ns=simple\r\nt=0 0\r\nm=video 0 RTP/AVP 96\r\na=rtpmap:96 H264/90000\r\na=control:track1\r\n", (int)t);
 }
 
 void response_options(rtsp_body_st *pbrtsp, char *rspbuf, int *rsplen)
@@ -121,7 +121,7 @@ void response_play(int comm_fd, rtsp_body_st *pbrtsp, char *rspbuf, int *rsplen)
 
     get_register_session(comm_fd, &session, NULL);
 
-    *rsplen = sprintf(rspbuf, "%s %d OK\r\nCSeq: %s\r\nDate: %sRange: %s\r\nSession: %X\r\nRTP-Info: url=%s%s;seq=%d,rtptime=%d\r\n\r\n", \
+    *rsplen = sprintf(rspbuf, "%s %d OK\r\nCSeq: %s\r\nDate: %s\r\nRange: %s\r\nSession: %X\r\nRTP-Info: url=%s%s;seq=%d,rtptime=%d\r\n\r\n", \
                                "RTSP/1.0", 200, \
                                pbrtsp->cseq,\
                                timestr, \

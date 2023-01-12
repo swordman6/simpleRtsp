@@ -1,5 +1,6 @@
 project(simpleRtsp)
 
+include_directories("${CMAKE_SOURCE_DIR}/rtp")
 include_directories("${CMAKE_SOURCE_DIR}/msocket")
 include_directories("${CMAKE_SOURCE_DIR}/public")
 include_directories("${CMAKE_SOURCE_DIR}/register")

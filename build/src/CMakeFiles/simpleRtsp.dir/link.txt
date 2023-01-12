@@ -1,1 +1,0 @@
-/opt/hisi-linux/x86-arm/arm-himix100-linux/bin/arm-himix100-linux-gcc -g    CMakeFiles/simpleRtsp.dir/main.c.o  -o ../../bin/simpleRtsp  -L/home/sword/lamer/github/simpleRtsp/libs -Wl,-rpath,/home/sword/lamer/github/simpleRtsp/libs ../../libs/libmsocket.a ../../libs/libparsertsp.a ../../libs/libregister.a ../../libs/libpublic.a 
