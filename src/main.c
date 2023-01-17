@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 
+#include "ntp.h"
 #include "msocket.h"
 #include "register.h"
 #include "rtspstruct.h"
@@ -9,6 +10,14 @@
 
 #define  RTSP_BUFFSIZE  1024
 
+int main(int argc, char *argv[])
+{
+    ntp_server_test();
+    
+    return 0;
+}
+
+#if 0
 int main(int argc, char *argv[])
 {
     int ret, flag = 0;
@@ -77,3 +86,5 @@ int main(int argc, char *argv[])
     destory_register_list();
     return 0;
 }
+
+#endif
