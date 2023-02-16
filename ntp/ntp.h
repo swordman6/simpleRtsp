@@ -29,7 +29,7 @@ struct ntp_pkt {
 	l_fp org;		              /* originate time stamp */
 	l_fp rec;		              /* receive time stamp */
 	l_fp xmt;		              /* transmit time stamp */
-};
+};  
 
 #define  NTP_VERSION  3
 
