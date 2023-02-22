@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
 
-set(CMAKE_C_COMPILER /opt/hisi-linux/x86-arm/arm-himix100-linux/bin/arm-himix100-linux-gcc)
+#set(CMAKE_C_COMPILER /opt/hisi-linux/x86-arm/arm-himix100-linux/bin/arm-himix100-linux-gcc)
+set(CMAKE_C_COMPILER /usr/bin/gcc)
 set(CMAKE_C_FLAGS "-g ${CMAKE_C_FLAGS}")
 add_compile_options(-Wall)
 

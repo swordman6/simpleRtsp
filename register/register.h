@@ -17,9 +17,9 @@ typedef enum{
 }comm_stage_flag;
 
 typedef struct{
-    int    ip;
-    short  rtpport;
-    short  rtcpport;
+    unsigned int    ip;
+    unsigned short  rtpport;
+    unsigned short  rtcpport;
 }net_comm_st;
 
 typedef struct{

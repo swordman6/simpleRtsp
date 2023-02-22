@@ -10,14 +10,15 @@
 
 #define  RTSP_BUFFSIZE  1024
 
+#if 0
 int main(int argc, char *argv[])
 {
     ntp_server_test();
     
     return 0;
 }
+#endif
 
-#if 0
 int main(int argc, char *argv[])
 {
     int ret, flag = 0;
@@ -33,7 +34,7 @@ int main(int argc, char *argv[])
     srv_fd = msocket_create(CREATE_SOCK_TCP);
 
     msocket_bind(srv_fd, SERVER_PORT, SERVER_IP);
-
+   
     msocket_listen(srv_fd, 5);
 
     msocket_fdset_init();
@@ -41,12 +42,14 @@ int main(int argc, char *argv[])
     max = srv_fd;
     while (1)
     {
+         printf("SERVER_PORT = %d, SERVER_IP = %s\n", SERVER_PORT, SERVER_IP);
         cli_fd = msocket_select(srv_fd, max, &flag);
         if(cli_fd < 0)
             return -1;
         else if(cli_fd == 0)
             continue;
 
+        printf("flag = %d\n", flag);
         if(flag == 1) //new usr
         {
             msocket_fdset_set(cli_fd);
@@ -86,5 +89,3 @@ int main(int argc, char *argv[])
     destory_register_list();
     return 0;
 }
-
-#endif

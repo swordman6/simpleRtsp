@@ -24,6 +24,6 @@ void msocket_fdset_set(int sock_fd);
 void msocket_fdset_clr(int sock_fd);
 int  msocket_select(int sock_fd, int max, int *flag);
 
-int  msocket_getip(int sock_fd, int flag);
+unsigned int msocket_getip(int sock_fd, int flag);
 
 #endif

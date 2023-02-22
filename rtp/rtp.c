@@ -93,7 +93,7 @@ void *rtp_transport_fun(void *arg)
                 memcpy(rtp_buf + sizeof(rtp_header) + 2, nalu_st.buf + i * 1436, 1436);
 
                 mudp_sendto(rtp_fd, st.ip, st.rtpport, rtp_buf, 1450);                
-
+            
                 i++;
                 hrtp.seq = ntohs(hrtp.seq);
                 hrtp.seq++;

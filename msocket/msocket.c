@@ -164,10 +164,11 @@ int msocket_recv(int sock_fd, char *buf, int bufsize)
 
 }
 
-int msocket_getip(int sock_fd, int flag)
+unsigned int msocket_getip(int sock_fd, int flag)
 {
     int ret, len;
     struct sockaddr_in sock_st;
+    len = sizeof(struct sockaddr_in);
 
     if(flag == GET_PEER_IP)
         ret = getpeername(sock_fd, (struct sockaddr *)&sock_st, (socklen_t *)&len);

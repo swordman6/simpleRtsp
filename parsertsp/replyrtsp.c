@@ -103,7 +103,7 @@ void response_setup(int comm_fd, rtsp_body_st *pbrtsp, char *rspbuf, int *rsplen
     inet_ntop(AF_INET, &st.cli, cli_ip, 16);
     inet_ntop(AF_INET, &st.srv, srv_ip, 16);
 
-    *rsplen = sprintf(rspbuf,"%s %d OK\r\nCSeq: %s\r\nDate: %s\r\nTransport: RTP/AVP;unicast;destination=%s;source=%s;client_port=%hd-%hd;server_port=%hd_%hd\r\nSession: %X;timeout=%d\r\n\r\n", \
+    *rsplen = sprintf(rspbuf,"%s %d OK\r\nCSeq: %s\r\nDate: %s\r\nTransport: RTP/AVP;unicast;destination=%s;source=%s;client_port=%hu-%hu;server_port=%hu_%hu\r\nSession: %X;timeout=%d\r\n\r\n", \
                               "RTSP/1.0", 200, \
                               pbrtsp->cseq, \
                               timestr, \

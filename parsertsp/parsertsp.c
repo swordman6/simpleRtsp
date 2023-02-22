@@ -10,14 +10,14 @@
 #include "replyrtsp.h"
 #include "parsertsp.h"
 
-static void parse_rtsp_transport(int comm_fd, rtsp_body_st *pbrtsp)
+static void parse_rtsp_transport(int comm_fd, char *p)
 {
     char str[32] = {0};
     net_comm_st cli_net;
 
-    pickstr(str, pbrtsp->transport, '=', '\0', strlen(pbrtsp->transport));
+    pickstr(str, p, '=', '\0', strlen(p));
 
-    sscanf(str, "%hd-%hd", &cli_net.rtpport, &cli_net.rtcpport);
+    sscanf(str, "%hu-%hu", &cli_net.rtpport, &cli_net.rtcpport);
 
     cli_net.ip = msocket_getip(comm_fd, GET_PEER_IP); 
 
@@ -54,7 +54,7 @@ void parse_rtsp_body(int comm_fd, rtsp_body_st *pbrtsp, char *buf)
         else if(!strncmp(type, "Transport", strlen("Transport")))
         {
             strncpy(pbrtsp->transport, content, sizeof(pbrtsp->transport));
-            parse_rtsp_transport(comm_fd, pbrtsp);
+            parse_rtsp_transport(comm_fd, pbrtsp->transport);
         }
         else if(!strncmp(type, "Range", strlen("Range")))
             strncpy(pbrtsp->range, content, sizeof(pbrtsp->range));
@@ -76,7 +76,6 @@ int parse_rtsp_msg(int comm_fd, char *buf, int buflen, char *rspbuf, int *rsplen
     if(!strncmp(hrtsp.rtsp_order, "OPTIONS", strlen("OPTIONS")))
     {
         response_options(&brtsp, rspbuf, rsplen);
-        modify_register_status(comm_fd, RSTP_COMM_REQUEST);
     }
     else if (!strncmp(hrtsp.rtsp_order, "DESCRIBE", strlen("DESCRIBE")))
     {
@@ -93,6 +92,7 @@ int parse_rtsp_msg(int comm_fd, char *buf, int buflen, char *rspbuf, int *rsplen
             int rtp_fd, rtcp_fd;
             net_comm_st srv_net;
             srv_net.ip = msocket_getip(comm_fd, GET_SOCK_IP);
+          
             create_rtpsock(&rtp_fd, &rtcp_fd, &srv_net);
             modify_register_netinfo(comm_fd, RTSP_NETINFO_SRV, (void *)&srv_net);
             modify_register_rtpsock(comm_fd, rtp_fd, rtcp_fd);

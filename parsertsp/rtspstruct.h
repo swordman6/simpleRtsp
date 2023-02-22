@@ -33,8 +33,8 @@ typedef struct{
   char *name;
 }rtsp_support_str;
 
-#define  SERVER_IP      "192.168.1.88"
-#define  SERVER_PORT    554
-#define  RTSP_DOMAIN    "rtsp://192.168.1.88:554/live/"
+#define  SERVER_IP      "192.168.1.83"
+#define  SERVER_PORT    8554
+#define  RTSP_DOMAIN    "rtsp://192.168.1.83:8554/live/"
 
 #endif
